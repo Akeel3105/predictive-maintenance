@@ -9,7 +9,7 @@ import os
 app = FastAPI()
 
 # Load model
-with open("predictive_maintenance_model.pkl", "rb") as f:
+with open("models/predictive_maintenance_model.pkl", "rb") as f:
     model = pickle.load(f)
 
 PREDICTIONS_FILE = "predictions.csv"
