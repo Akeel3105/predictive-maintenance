@@ -3,7 +3,8 @@ import requests
 import random
 import time
 
-API_URL = "http://127.0.0.1:8000/predict"  # make sure FastAPI is running
+# API_URL = "http://127.0.0.1:8000/predict"  # make sure FastAPI is running
+API_URL = "https://predictive-maintenance-nxnp.onrender.com/predict"  # make sure FastAPI is running
 
 def generate_sample():
     return {
