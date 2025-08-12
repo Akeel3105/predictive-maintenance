@@ -9,7 +9,10 @@ import os
 app = FastAPI()
 
 # Load model
-with open("models/predictive_maintenance_model.pkl", "rb") as f:
+
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "predictive_maintenance_model.pkl")
+with open(MODEL_PATH, "rb") as f:
+# with open("models/predictive_maintenance_model.pkl", "rb") as f:
     model = pickle.load(f)
 
 PREDICTIONS_FILE = "predictions.csv"
