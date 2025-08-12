@@ -1,22 +1,21 @@
 import requests
-import time
 import random
+import time
 
-API_URL = "https://predictive-maintenance-nxnp.onrender.com/predict"  # Your Render API endpoint
+API_URL = "https://predictive-maintenance-nxnp.onrender.com/predict"  # Replace with your Render URL
 
 while True:
-    payload = {
+    data = {
         "temperature": round(random.uniform(70, 100), 3),
-        "vibration": round(random.uniform(0.1, 1.0), 3),
-        "pressure": round(random.uniform(20, 50), 3),
+        "vibration": round(random.uniform(0.1, 0.5), 3),
+        "pressure": round(random.uniform(30, 50), 3),
         "rpm": round(random.uniform(1000, 2000), 3)
     }
-    
     try:
-        response = requests.post(API_URL, json=payload)
-        print(f"Sent: {payload}")
-        print(f"Response: {response.json()}")
+        response = requests.post(API_URL, json=data)
+        print(f"Sent: {data}")
+        print("Response:", response.json())
     except Exception as e:
-        print(f"Error: {e}")
-    
-    time.sleep(3)
+        print("Error:", e)
+
+    time.sleep(5)  # every 5 seconds

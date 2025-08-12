@@ -3,27 +3,26 @@ import pandas as pd
 import requests
 import time
 
-st.set_page_config(page_title="Predictive Maintenance Dashboard", layout="wide")
+API_URL = "https://predictive-maintenance-nxnp.onrender.com/recent_predictions"  # Replace with your Render URL
 
-API_URL = "https://predictive-maintenance-nxnp.onrender.com/recent_predictions"
+st.title("🔴 Predictive Maintenance Live Dashboard")
+st.write("Live updates from FastAPI predictions")
 
-st.title("📊 Predictive Maintenance Live Dashboard")
 placeholder = st.empty()
 
 while True:
     try:
-        res = requests.get(API_URL)
-        if res.status_code == 200:
-            data = res.json().get("data", [])
+        response = requests.get(API_URL)
+        if response.status_code == 200:
+            data = response.json()
             if data:
                 df = pd.DataFrame(data)
-                with placeholder.container():
-                    st.dataframe(df)
+                placeholder.dataframe(df)
             else:
-                st.write("No predictions yet...")
+                st.write("No data yet...")
         else:
-            st.error(f"Error fetching data: {res.status_code}")
+            st.write("Error fetching data:", response.status_code)
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.write("Error:", e)
 
-    time.sleep(5)  # Refresh every 5 seconds
+    time.sleep(5)
