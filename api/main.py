@@ -1,22 +1,24 @@
-# main.py
 from fastapi import FastAPI
 from pydantic import BaseModel
-import pickle
 import pandas as pd
-from datetime import datetime
+import pickle
 import os
 
-app = FastAPI()
+app = FastAPI(title="Predictive Maintenance API")
+
+# Paths
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "..", "models", "predictive_maintenance_model.pkl")
+PREDICTIONS_CSV = os.path.join(BASE_DIR, "..", "data", "predictions.csv")
+
+# Make sure data folder exists
+os.makedirs(os.path.join(BASE_DIR, "..", "data"), exist_ok=True)
 
 # Load model
-
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "predictive_maintenance_model.pkl")
 with open(MODEL_PATH, "rb") as f:
-# with open("models/predictive_maintenance_model.pkl", "rb") as f:
     model = pickle.load(f)
 
-PREDICTIONS_FILE = "predictions.csv"
-
+# Expected input schema (MATCH TRAINING FEATURE NAMES)
 class MachineData(BaseModel):
     temperature: float
     vibration: float
@@ -25,31 +27,26 @@ class MachineData(BaseModel):
 
 @app.post("/predict")
 def predict(data: MachineData):
-    features = [[data.temperature, data.vibration, data.pressure, data.rpm]]
-    prediction = model.predict(features)[0]
+    try:
+        df = pd.DataFrame([data.dict()])
+        prediction = model.predict(df)[0]
 
-    # Append to CSV
-    record = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "temperature": data.temperature,
-        "vibration": data.vibration,
-        "pressure": data.pressure,
-        "rpm": data.rpm,
-        "prediction": prediction
-    }
+        # Append to CSV
+        record = data.dict()
+        record["prediction"] = int(prediction)
+        df_out = pd.DataFrame([record])
+        if os.path.exists(PREDICTIONS_CSV):
+            df_out.to_csv(PREDICTIONS_CSV, mode="a", header=False, index=False)
+        else:
+            df_out.to_csv(PREDICTIONS_CSV, index=False)
 
-    if not os.path.exists(PREDICTIONS_FILE):
-        pd.DataFrame([record]).to_csv(PREDICTIONS_FILE, index=False)
-    else:
-        df = pd.read_csv(PREDICTIONS_FILE)
-        df = pd.concat([df, pd.DataFrame([record])], ignore_index=True)
-        df.to_csv(PREDICTIONS_FILE, index=False)
-
-    return {"prediction": int(prediction)}
+        return {"prediction": int(prediction)}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/recent_predictions")
-def recent_predictions(limit: int = 10):
-    if not os.path.exists(PREDICTIONS_FILE):
-        return []
-    df = pd.read_csv(PREDICTIONS_FILE)
-    return df.tail(limit).to_dict(orient="records")
+def get_recent_predictions(limit: int = 10):
+    if not os.path.exists(PREDICTIONS_CSV):
+        return {"data": []}
+    df = pd.read_csv(PREDICTIONS_CSV)
+    return {"data": df.tail(limit).to_dict(orient="records")}
